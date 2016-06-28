@@ -1,0 +1,18 @@
+#
+# this is your module manifest and used by Titanium
+# during compilation, packaging, distribution, etc.
+#
+version: 1.0.0
+apiversion: 2
+architectures: armeabi armeabi-v7a x86
+description: tipodcast
+author: Rainer Schleevoigt
+license: Specify your license
+copyright: Copyright (c) 2016 by 
+
+# these should not be edited
+name: TiPodcast
+moduleid: de.appwerft.podcast
+guid: a10c44f9-23d1-4f82-ba7e-9ff003f6a169
+platform: android
+minsdk: 4.0.0.GA
