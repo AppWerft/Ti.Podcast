@@ -70,22 +70,20 @@ public class TipodcastModule extends KrollModule {
 							"category", "copyright", "pubDate",
 							"lastBuildDate", "itunes|subtitle" };
 					for (String key : keys) {
-						data.put(key, doc.select("channel > " + key).first()
-								.text());
+						data.put(key.replace("itunes|", ""),
+								doc.select("channel > " + key).first().text());
 					}
 					List<KrollDict> items = new ArrayList<KrollDict>();
 					Elements elements = doc.select("channel > item");
 					for (Element element : elements) {
 						KrollDict o = new KrollDict();
-						o.put("title", element.select("title").text());
-						o.put("guid", element.select("guid").text());
-						o.put("pubDate", element.select("pubDate").text());
-						o.put("description", element.select("description")
-								.text());
-						o.put("duration", element.select("itunes|duration")
-								.text());
-						o.put("author", element.select("itunes|author").text());
-						o.put("link", element.select("link").text());
+						final String[] subkeys = { "title", "description",
+								"link", "itunes/author", "itunes|duration",
+								"pubDate", "itunes|subtitle", "guid" };
+						for (String subkey : subkeys) {
+							o.put(subkey.replace("itunes|", ""), element
+									.select(subkey).first().text());
+						}
 						KrollDict enclosure = new KrollDict();
 						enclosure.put("url",
 								element.select("enclosure").attr("url"));
