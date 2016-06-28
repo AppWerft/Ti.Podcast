@@ -65,7 +65,6 @@ public class TipodcastModule extends KrollModule {
 				try {
 					Document doc = Jsoup.connect(url).userAgent(userAgent)
 							.timeout(timeout).ignoreContentType(true).get();
-
 					final String[] keys = { "title", "description", "link",
 							"category", "copyright", "pubDate",
 							"lastBuildDate", "itunes|subtitle" };
