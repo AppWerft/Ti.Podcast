@@ -30,7 +30,7 @@ import android.os.AsyncTask;
 @Kroll.module(name = "Tipodcast", id = "de.appwerft.podcast")
 public class TipodcastModule extends KrollModule {
 	// Standard Debugging variables
-	private static final String LCAT = "HTMLScraper";
+	private static final String LCAT = "Podcastsauger";
 	public KrollFunction mCallback;
 
 	public TipodcastModule() {
@@ -51,37 +51,44 @@ public class TipodcastModule extends KrollModule {
 				int timeout = 10000;
 				String url = null;
 				String userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:46.0) Gecko/20100101 Firefox/46.0";
-				/* reading of proxy properties: */
-				if (options.containsKey("timeout")) {
+				if (options.containsKeyAndNotNull("timeout")) {
 					timeout = options.getInt("timeout");
 				}
-				if (options.containsKey(TiC.PROPERTY_URL)) {
+				if (options.containsKeyAndNotNull(TiC.PROPERTY_URL)) {
 					url = options.getString(TiC.PROPERTY_URL);
 				}
-				if (options.containsKey("userAgent")) {
+				if (options.containsKeyAndNotNull("userAgent")) {
 					userAgent = options.getString("userAgent");
 				}
-				KrollDict data = new KrollDict();
+				KrollDict resultDict = new KrollDict();
 				try {
 					Document doc = Jsoup.connect(url).userAgent(userAgent)
 							.timeout(timeout).ignoreContentType(true).get();
+					/* first getting channel data */
 					final String[] keys = { "title", "description", "link",
 							"category", "copyright", "pubDate",
 							"lastBuildDate", "itunes|subtitle" };
 					for (String key : keys) {
-						data.put(key.replace("itunes|", ""),
-								doc.select("channel > " + key).first().text());
+						Element elem = doc.select("channel > " + key).first();
+						if (elem != null)
+							resultDict.put(key.replace("itunes|", ""),
+									elem.text());
 					}
-					List<KrollDict> items = new ArrayList<KrollDict>();
+					/* getting items */
+					List<KrollDict> itemArray = new ArrayList<KrollDict>();
 					Elements elements = doc.select("channel > item");
 					for (Element element : elements) {
 						KrollDict o = new KrollDict();
 						final String[] subkeys = { "title", "description",
-								"link", "itunes/author", "itunes|duration",
-								"pubDate", "itunes|subtitle", "guid" };
+								"link", "itunes|author", "itunes|duration",
+								"pubDate", "guid" };
 						for (String subkey : subkeys) {
-							o.put(subkey.replace("itunes|", ""), element
-									.select(subkey).first().text());
+							Log.d(LCAT, "key=" + subkey);
+							Element subelem = element.select(subkey).first();
+							if (subelem != null)
+								o.put(subkey.replace("itunes|", ""),
+										subelem.text());
+
 						}
 						KrollDict enclosure = new KrollDict();
 						enclosure.put("url",
@@ -91,17 +98,17 @@ public class TipodcastModule extends KrollModule {
 						enclosure.put("type",
 								element.select("enclosure").attr("type"));
 						o.put("enclosure", enclosure);
-						items.add(o);
+						itemArray.add(o);
 					}
-					data.put("items", items.toArray());
-					mCallback.call(getKrollObject(), data);
+					resultDict.put("items", itemArray.toArray());
+					mCallback.call(getKrollObject(), resultDict);
 				} catch (MalformedURLException e) {
-					data.put("error", "MalformedURLException");
-					mCallback.call(getKrollObject(), data);
+					resultDict.put("error", "MalformedURLException");
+					mCallback.call(getKrollObject(), resultDict);
 					e.printStackTrace();
 				} catch (IOException e) {
-					data.put("error", "IOException");
-					mCallback.call(getKrollObject(), data);
+					resultDict.put("error", "IOException");
+					mCallback.call(getKrollObject(), resultDict);
 					e.printStackTrace();
 				}
 				return null;
